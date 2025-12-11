@@ -9,3 +9,26 @@
 
 
 # Team member’s contributions
+
+## Anup Bhowmik
+Simulation Setup:
+Implemented a simple multi-threaded simulation for sequence decoding using a KV backend.
+
+Features:
+Multi-threaded Simulation:
+Each sequence is processed in a separate thread using POSIX threads (pthread). Threads simulate prompt token generation.
+
+Token Generation Simulation:
+For each sequence, tokens are appended to the backend for both prompt and generation phases. Sleep (usleep) simulates processing time per token.
+
+Thread Arguments Struct:
+ThreadArgs struct passes necessary data (backend, config, work, index) to each thread.
+
+Backend Interaction:
+Uses functions from kv_backend.h to initialize sequences, append tokens, and collect statistics.
+
+Resource Management:
+Dynamically allocates and frees memory for thread handles and arguments.
+
+Statistics Collection:
+Returns backend statistics after all threads complete.

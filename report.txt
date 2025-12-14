@@ -32,3 +32,11 @@ Dynamically allocates and frees memory for thread handles and arguments.
 
 Statistics Collection:
 Returns backend statistics after all threads complete.
+
+
+# Resources and Guides
+llama.cpp guide - Running LLMs locally, on any hardware, from scratch
+(https://blog.steelph0enix.dev/posts/llama-cpp-guide/#building-the-llama)
+
+Understanding how LLM inference works with llama.cpp
+(https://www.omrimallis.com/posts/understanding-how-llm-inference-works-with-llama-cpp/)

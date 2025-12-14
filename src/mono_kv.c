@@ -38,9 +38,8 @@ static SeqId mono_init_sequence(KVBackend* backend, const SequenceWork* work) {
     MonoSeqState* s = &impl->seqs[id];
     s->bytes_per_token = bytes_per_token(&impl->cfg);
     
-    // FIX: Allocate a fixed "Context Window" size to simulate real-world monolithic waste.
     // Real systems must pre-allocate max_context_length because they can't realloc easily.
-    s->max_tokens = 2048; 
+    s->max_tokens = s->max_tokens; 
     
     s->cur_tokens = 0;
     s->kv_buffer = (unsigned char*) malloc(s->max_tokens * s->bytes_per_token);

@@ -22,7 +22,7 @@ typedef struct SimConfig {
 
 static inline size_t bytes_per_token(const SimConfig* cfg) {
     // 2 for K and V, assume fp16 (2 bytes)
-    return cfg->num_layers * cfg->num_heads * cfg->head_dim * 2u * 2u;
+    return cfg->num_layers * cfg->num_heads * cfg->head_dim * 4u;
 }
 
 #endif

@@ -14,13 +14,19 @@ This project simulates the memory usage of different Key-Value (KV) cache backen
 ## Anup Bhowmik
 ========== Simulation Setup ==========
 Implemented a simple multi-threaded simulation for sequence decoding using a KV backend.
+This simulator models the memory usage of LLM (Large Language Model) KV (Key-Value) caches during concurrent decoding.
 
 ------------------ Features ------------------
+KV Cache: 
+In transformer models, each token processed generates key and value vectors that are stored in a cache for use in future attention computations.
+
 Multi-threaded Simulation:
 Each sequence is processed in a separate thread using POSIX threads (pthread). Threads simulate prompt token generation.
 
 Token Generation Simulation:
 For each sequence, tokens are appended to the backend for both prompt and generation phases. Sleep (usleep) simulates processing time per token.
+Other steps (like attention, feedforward, attention, softmax, or neural network layers, etc.) are not simulated because They do not affect the memory layout of the KV cache.
+The simulator's goal is to measure peak memory usage for the cache, not to simulate the full computation of the model.
 
 Thread Arguments Struct:
 ThreadArgs struct passes necessary data (backend, config, work, index) to each thread.

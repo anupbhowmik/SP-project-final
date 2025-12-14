@@ -12,7 +12,6 @@ static void print_stats(const char* name, const KVStats* st) {
     printf("  logical_bytes  = %zu\n", st->logical_bytes);
     printf("  physical_bytes = %zu\n", st->physical_bytes);
 
-    // FIX: Handle case where physical < logical (due to sharing) to avoid underflow
     if (st->physical_bytes > st->logical_bytes) {
         size_t waste = st->physical_bytes - st->logical_bytes;
         double ratio = (double)waste / (double)st->physical_bytes;

@@ -28,14 +28,15 @@ int main(void) {
     srand((unsigned int) time(NULL));
 
     SimConfig cfg;
-    // FIX: Scale down dimensions to fit in RAM.
+
+    // Scale down dimensions to fit in RAM.
     // Previous config was ~512KB per token, requiring >160GB RAM.
     // New config is ~8KB per token.
     cfg.num_layers       = 4;   // Reduced from 32
     cfg.num_heads        = 8;   // Reduced from 32
     cfg.head_dim         = 64;  // Reduced from 128
     
-    cfg.tokens_per_page  = 16;  // 16 tokens per page is a common default (e.g. vLLM)
+    cfg.tokens_per_page  = 16;
     cfg.arena_bytes      = (size_t)2 << 30; // Increase arena to 2 GB
 
     cfg.num_sequences    = 128;
@@ -53,18 +54,15 @@ int main(void) {
     int seq_idx = 0;
     size_t shared_prompt_len = 256; // Explicit shared length
 
-    for (int g = 0; g < cfg.num_groups; ++g) {
+    for (int g = 0; g < cfg.num_groups; g++) {
         int group_prompt_id = g + 1; 
         int seqs_in_group = cfg.num_sequences / cfg.num_groups;
         
-        for (int i = 0; i < seqs_in_group; ++i) {
+        for (int i = 0; i < seqs_in_group; i++) {
             if (seq_idx >= cfg.num_sequences) break;
             
-            // FIX: Removed .id assignment (not in struct)
-            // FIX: Renamed .prompt_len -> .prompt_tokens
             work[seq_idx].prompt_tokens = shared_prompt_len;
-            
-            // FIX: Renamed .gen_len -> .gen_tokens
+
             work[seq_idx].gen_tokens = cfg.min_gen_tokens + (rand() % (cfg.max_gen_tokens - cfg.min_gen_tokens + 1));
             
             // This requires the update to include/workload.h

@@ -11,10 +11,10 @@
 # Team member’s contributions
 
 ## Anup Bhowmik
-Simulation Setup:
+========== Simulation Setup ==========
 Implemented a simple multi-threaded simulation for sequence decoding using a KV backend.
 
-Features:
+------------------ Features ------------------
 Multi-threaded Simulation:
 Each sequence is processed in a separate thread using POSIX threads (pthread). Threads simulate prompt token generation.
 
@@ -32,6 +32,19 @@ Dynamically allocates and frees memory for thread handles and arguments.
 
 Statistics Collection:
 Returns backend statistics after all threads complete.
+
+
+========== Main Setup ==========
+contains the entry point and main simulation driver for the project. It sets up the simulation configuration, generates a workload with shared prefixes, runs two different KV backends (monolithic and paged with prefix sharing), and prints memory usage statistics for each backend.
+
+Steps:
+1. Setup mono KV backend and page KV backend and their configuration
+2. Initialize random seed
+3. Generate a workload array of SequenceWork structs, ensuring that sequences are grouped for shared prefix simulation.
+4. Run simulation (both mono and paged)
+5. Print stats and results
+6. Free workload and other allocations
+
 
 
 # Resources and Guides

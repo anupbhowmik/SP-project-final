@@ -47,11 +47,7 @@ int main(void) {
 
     printf("bytes_per_token = %zu\n", bytes_per_token(&cfg));
 
-    // FIX: Manually generate workload to ensure shared_prompt_id is set correctly.
-    // generate_workload(&cfg) might not set shared IDs, resulting in 0% savings.
-    SequenceWork* work = calloc(cfg.num_sequences, sizeof(SequenceWork));
-    int seq_idx = 0;
-    size_t shared_prompt_len = 256; // Explicit shared length
+    SequenceWork* work = generate_workload(&cgf)
 
     for (int g = 0; g < cfg.num_groups; g++) {
         // each group gets a unique shared prompt ID, (simulating) they share the same prefix

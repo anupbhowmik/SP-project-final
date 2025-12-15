@@ -7,6 +7,17 @@ How to run this project:
 
 We have included the executable.
 > ./llm_sim 
+> ./llm_sim
+bytes_per_token = 8192
+Monolithic:
+  logical_bytes  = 1783947264
+  physical_bytes = 2147483648
+  waste_bytes    = 363536384 (16.93%)
+Paged+Prefix:
+  logical_bytes  = 1783947264
+  physical_bytes = 749600768
+  memory_saved   = 1034346496 (57.98%)
+
 
 For build and run, 
 > make clean 

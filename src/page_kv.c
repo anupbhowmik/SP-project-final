@@ -87,21 +87,9 @@ static SeqId paged_init_sequence(KVBackend* backend, const SequenceWork* work) {
     PagedKVImpl* impl = (PagedKVImpl*) backend->impl;
     pthread_mutex_lock(&impl->mutex);
 
-    if (impl->num_seqs == impl->seq_capacity) {
-        size_t new_cap = impl->seq_capacity == 0 ? 16 : impl->seq_capacity * 2;
-        PagedSeqState* ns = (PagedSeqState*) realloc(impl->seqs, new_cap * sizeof(PagedSeqState));
-        if (!ns) {
-            pthread_mutex_unlock(&impl->mutex);
-            abort();
-        }
-        for (size_t i = impl->seq_capacity; i < new_cap; ++i) {
-            ns[i].slots = NULL;
-            ns[i].slots_capacity = 0;
-            ns[i].cur_tokens = 0;
-            ns[i].shared_prefix_tokens = 0;
-        }
-        impl->seqs = ns;
-        impl->seq_capacity = new_cap;
+    if (impl->num_seqs >= impl->seq_capacity) {
+        pthread_mutex_unlock(&impl->mutex);
+        abort();
     }
 
     SeqId id = impl->num_seqs++;
@@ -233,6 +221,12 @@ KVBackend* create_paged_backend(const SimConfig* cfg) {
     impl->cfg   = *cfg;
     impl->alloc = page_allocator_create(cfg);
     pthread_mutex_init(&impl->mutex, NULL);
+
+    impl->seq_capacity = cfg->num_sequences;
+    impl->seqs = (PagedSeqState*) calloc(impl->seq_capacity, sizeof(PagedSeqState));
+    if (!impl->seqs) abort();
+    impl->num_seqs = 0;
+
     paged_init_prefix_groups(impl);
 
     b->vtable = &PAGED_VTABLE;

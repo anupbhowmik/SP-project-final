@@ -64,7 +64,7 @@ static SeqId mono_init_sequence(KVBackend* backend, const SequenceWork* work) {
     SeqId id = impl->num_seqs++;
     MonoSeqState* s = &impl->seqs[id];
     s->bytes_per_token = bytes_per_token(&impl->cfg);
-    s->max_tokens = s->max_tokens; 
+    s->max_tokens = impl->cfg.max_context_tokens;
     
     s->cur_tokens = 0;
     s->kv_buffer = (unsigned char*) malloc(s->max_tokens * s->bytes_per_token);

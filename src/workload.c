@@ -28,8 +28,6 @@ static size_t align_down(size_t x, size_t a) {
     const size_t tpp = cfg->tokens_per_page ? cfg->tokens_per_page : 1;
     const size_t max_ctx = cfg->max_context_tokens ? cfg->max_context_tokens : 2048;
 
-    // Make prefix substantial but not the whole window (realistic sharing)
-    // e.g., 1024 tokens if max_ctx=2048 and tpp=16.
     size_t target_prefix = max_ctx / 2;
     size_t shareable_prefix = align_down(target_prefix, tpp);
 

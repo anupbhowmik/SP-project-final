@@ -12,7 +12,6 @@ static void print_stats(const char* name, const KVStats* st) {
     printf("  logical_bytes  = %zu\n", st->logical_bytes);
     printf("  physical_bytes = %zu\n", st->physical_bytes);
 
-    // FIX: Handle case where physical < logical (due to sharing) to avoid underflow
     if (st->physical_bytes > st->logical_bytes) {
         size_t waste = st->physical_bytes - st->logical_bytes;
         double ratio = (double)waste / (double)st->physical_bytes;
@@ -55,6 +54,7 @@ int main(void) {
     size_t shared_prompt_len = 256; // Explicit shared length
 
     for (int g = 0; g < cfg.num_groups; g++) {
+        // each group gets a unique shared prompt ID, (simulating) they share the same prefix
         int group_prompt_id = g + 1; 
         int seqs_in_group = cfg.num_sequences / cfg.num_groups;
         
@@ -66,7 +66,7 @@ int main(void) {
             work[seq_idx].gen_tokens = cfg.min_gen_tokens + (rand() % (cfg.max_gen_tokens - cfg.min_gen_tokens + 1));
             
             // This requires the update to include/workload.h
-            work[seq_idx].shared_prompt_id = group_prompt_id; // CRITICAL for sharing
+            work[seq_idx].shared_prompt_id = group_prompt_id; // CRITICAL for sharing,  simulates prompt sharing
             
             seq_idx++;
         }

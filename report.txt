@@ -9,3 +9,79 @@
 
 
 # Team member’s contributions
+
+## Evan Dreher
+========== Monolithic KV Backend ==========
+Implemented a simple monolithic KV cache backend that stores all KV cache data in contiguous memory buffers.
+
+Structures:
+1. MonoSeqState struct that tracks the state of a single sequence implementing a monolithic backend
+    - max_tokens: number of tokens this sequence can have
+    - cur_tokens: number of tokens this sequence already has
+    - bytes_per_token: size of the KV data (size K + size V)
+    - kv_buffer: buffer that holds all data for this sequence
+
+2. MonoKVImpl structu that is an Implementation state for the monolithic KV backend
+    - cfg: config params
+    - seqs: all sequence states
+    - num_seqs: current number of active sequences
+    - capacity: current allocated capacity of the seqs array
+    - mutex: mutex lock for sequence management
+
+Operations:
+1. Initialization (mono_init_sequence):
+    - allocates a sequence slot
+    - grows the sequence array dynamically if its at capacity
+    - pre-allocates the KV buffer upfront
+
+2. Token Append (mono_append_token):
+    - increments the token counter if space is available, otherwise fail silently
+    - In a real system, this would also write KV cache data to the buffer
+
+3. Sequence Finish (mono_finish_sequence):
+    - This is a no-op implementation; no deallocation occurs
+    - In a real system, this could trigger memory reclamation or accounting updates
+
+4. Statistics (mono_stats):
+    - counts total tokens
+    - counts total physical bytes allocated from buffers
+    - counts amount of wasted memory
+
+5. Cleanup (mono_destroy):
+    - the deallocator function
+
+========== Workload Generation ==========
+Implemented the workload generator that creates synthetic LLM inference scenarios for testing the backends.
+
+Features:
+
+1. Shared Prefix Grouping:
+    - all seq are split into groups by their common prompt prefix
+    - this enables testing of prefix-sharing optimizations
+
+2. Page-Aligned Prefixes:
+    - base prefix length is set to 128 pages
+    - aligned to tokens_per_page to allow us to efficiently reuse pages
+
+3. Random Prompt Variation:
+    - each sequence gets its shared prefix plus some randomly generated number of extra tokens.
+    - models varied input lengths despite the shared prefix.
+
+4. Random Generation Length:
+    - each sequence generates a random number of tokens
+    - models varied output lengths across concurrent requests
+
+Output:
+- one SequenceWork struct per sequence
+- SequenceWork:
+    - prompt_tokens: total prompt length
+    - gen_tokens: number of tokens this sequence will generate
+    - shared_prompt_tokens: number of tokens in the shared prefix
+    - shared_prompt_id: group number
+  
+# Resources and Guides
+llama.cpp guide - Running LLMs locally, on any hardware, from scratch
+(https://blog.steelph0enix.dev/posts/llama-cpp-guide/#building-the-llama)
+
+Understanding how LLM inference works with llama.cpp
+(https://www.omrimallis.com/posts/understanding-how-llm-inference-works-with-llama-cpp/)

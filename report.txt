@@ -46,6 +46,58 @@ Steps:
 6. Free workload and other allocations
 
 
+## Tawheed Islam Bhuian
+========== Page Allocation and KV Backend ==========
+goal is to design LLM backend that allocates memory in fixed-size “pages” (token blocks) and optionally shares prefix pages across sequences, so physical allocation tracks usage more closely than “one fixed 2048-window buffer per sequence”.
+
+
+Backend creation:
+Steps:
+
+1. create_paged_backend allocates KVBackend and PagedKVImpl, copies cfg, and initializes impl->mutex.
+2. It creates a fixed-size page pool via page_allocator_create:
+    a. Computes page size and number of pages.
+    b. mmaps a single arena.
+    c. Initializes Page metadata and populates the allocator free list.
+3. Prefix-sharing groups (SharedPrefix) are allocated if enabled, but no pages are allocated yet.
+4. The backend vtable is wired and returned. arena exists; all pages are free.
+
+
+Sequence initialization:
+
+Steps:
+
+1. paged_init_sequence reserves a sequence slot.
+2. Computes shareable prefix length (page-aligned).
+3. If prefix sharing is enabled:
+    a. Selects a group.
+    b. Lazily builds the group prefix by allocating pages from the allocator.
+    c. Attaches prefix pages to the sequence and increments page refcounts.
+
+
+Token append:
+
+Steps:
+
+1. paged_append_token computes the target page index from the token count.
+2. If the page slot is empty:
+    a. Allocates a page via page_alloc (popped from free list, ref = 1).
+    b. Tokens fill pages sequentially; allocation is lazy and page-granular.
+
+
+Sequence finish:
+
+Steps:
+
+1. paged_finish_sequence decrements refcounts for all pages in the sequence.
+2. Pages with ref == 0 are returned to the allocator free list.
+
+
+
+
+
+
+
 
 # Resources and Guides
 llama.cpp guide - Running LLMs locally, on any hardware, from scratch

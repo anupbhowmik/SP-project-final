@@ -12,15 +12,14 @@ static void print_stats(const char* name, const KVStats* st) {
     printf("  logical_bytes  = %zu\n", st->logical_bytes);
     printf("  physical_bytes = %zu\n", st->physical_bytes);
 
-    if (st->physical_bytes > st->logical_bytes) {
-        size_t waste = st->physical_bytes - st->logical_bytes;
-        double ratio = (double)waste / (double)st->physical_bytes;
-        printf("  waste_bytes    = %zu (%.2f%%)\n", waste, ratio * 100.0);
-    } else {
-        size_t saved = st->logical_bytes - st->physical_bytes;
-        double ratio = (double)saved / (double)st->logical_bytes;
-        printf("  memory_saved   = %zu (%.2f%%)\n", saved, ratio * 100.0);
-    }
+    size_t saved = st->logical_bytes > st->physical_bytes ? st->logical_bytes - st->physical_bytes : 0;
+    size_t waste = st->physical_bytes > st->logical_bytes ? st->physical_bytes - st->logical_bytes : 0;
+
+    double waste_ratio = (st->physical_bytes > 0) ? ((double)waste / (double)st->physical_bytes) : 0.0;
+    double save_ratio = (st->logical_bytes > 0) ? ((double)saved / (double)st->logical_bytes) : 0.0;
+
+    printf("  waste_bytes    = %zu (%.2f%%)\n", waste, waste_ratio * 100.0);
+    printf("  memory_saved   = %zu (%.2f%%)\n", saved, save_ratio * 100.0);
 }
 
 int main(void) {
@@ -51,13 +50,13 @@ int main(void) {
     // Baseline monolithic
     KVBackend* mono = create_monolithic_backend(&cfg);
     KVStats st_mono = run_simulation(mono, &cfg, work);
-    print_stats("Monolithic", &st_mono);
+    print_stats("\nMonolithic", &st_mono);
     kv_destroy(mono);
 
     // Paged + prefix sharing
     KVBackend* paged = create_paged_backend(&cfg);
     KVStats st_paged = run_simulation(paged, &cfg, work);
-    print_stats("Paged+Prefix", &st_paged);
+    print_stats("\nPaged+Prefix", &st_paged);
     kv_destroy(paged);
 
     free(work);

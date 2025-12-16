@@ -8,6 +8,8 @@ typedef struct SimConfig {
     size_t num_layers;          // transformer layers
     size_t num_heads;           // attention heads
     size_t head_dim;        // dimension per head
+    
+    size_t max_context_tokens; // max tokens in context window
     size_t tokens_per_page;    // tokens stored per memory page
     size_t arena_bytes;      // size of memory arena in bytes
 

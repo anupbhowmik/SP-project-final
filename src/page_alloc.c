@@ -28,6 +28,17 @@ typedef struct PageAllocator {
     pthread_mutex_t mutex;
 } PageAllocator;
 
+/*
+ * page_allocator_create
+ *
+ * Creates a fixed-size page pool used by the paged KV backend.
+ * - Derives page size from cfg->tokens_per_page * bytes_per_token(cfg).
+ * - Splits a single mmap'd arena into pa->num_pages fixed-size pages.
+ * - Initializes metadata (Page array) and a LIFO free list of all pages.
+ * - Initializes the allocator mutex.
+ *
+ * Returns: a fully initialized PageAllocator*; aborts on allocation/mmap failure.
+ */
 PageAllocator* page_allocator_create(const SimConfig* cfg) {
     PageAllocator* pa = (PageAllocator*) calloc(1, sizeof(PageAllocator));
     if (!pa) abort();
@@ -59,6 +70,16 @@ PageAllocator* page_allocator_create(const SimConfig* cfg) {
     return pa;
 }
 
+/*
+ * page_allocator_destroy
+ *
+ * Releases all resources owned by the allocator:
+ * - Unmaps the arena
+ * - Frees page metadata and the free list
+ * - Destroys the mutex
+ *
+ * Precondition: no other threads are using the allocator.
+ */
 void page_allocator_destroy(PageAllocator* pa) {
     size_t arena_size = pa->num_pages * pa->page_bytes;
     munmap(pa->arena, arena_size);
@@ -68,11 +89,21 @@ void page_allocator_destroy(PageAllocator* pa) {
     free(pa);
 }
 
+/*
+ * page_alloc
+ *
+ * Allocates one page from the allocator free list:
+ * - Pops one Page* from free_list (LIFO)
+ * - Sets its refcount to 1
+ *
+ * Thread-safety: protected by pa->mutex.
+ * Failure: aborts if the free list is empty (simulator out-of-memory).
+ */
 Page* page_alloc(PageAllocator* pa) {
     pthread_mutex_lock(&pa->mutex);
     if (pa->free_count == 0) {
         pthread_mutex_unlock(&pa->mutex);
-        abort(); // out of pages in this simulation
+        abort(); // out of pages
     }
     Page* p = pa->free_list[--pa->free_count];
     p->ref = 1;
@@ -80,12 +111,30 @@ Page* page_alloc(PageAllocator* pa) {
     return p;
 }
 
+/*
+ * page_inc_ref
+ *
+ * Increments the reference count for a page.
+ * Used when multiple sequences share the same underlying page (prefix sharing).
+ *
+ * Note: This simulator increments without atomic ops or a mutex; correctness relies
+ * on callers avoiding concurrent increments to the same Page from multiple threads.
+ */
 void page_inc_ref(PageAllocator* pa, Page* p) {
     (void) pa;
     // for a simulator, we can just increment without atomic
     p->ref++;
 }
 
+/*
+ * page_dec_ref
+ *
+ * Decrements the reference count for a page.
+ * When the count reaches zero, returns the page back to the allocator free list.
+ *
+ * Thread-safety: uses pa->mutex to protect the free list and refcount-to-free transition.
+ * Failure: aborts if refcount is already zero (double-free / bug).
+ */
 void page_dec_ref(PageAllocator* pa, Page* p) {
     pthread_mutex_lock(&pa->mutex);
     if (p->ref == 0) {
@@ -99,6 +148,15 @@ void page_dec_ref(PageAllocator* pa, Page* p) {
     pthread_mutex_unlock(&pa->mutex);
 }
 
+/*
+ * page_allocator_pages_in_use
+ *
+ * Counts how many pages currently have refcount > 0.
+ * This is used by the paged backend stats to compute physical_bytes as:
+ *   pages_in_use * page_bytes
+ *
+ * Thread-safety: holds pa->mutex while scanning page metadata.
+ */
 size_t page_allocator_pages_in_use(PageAllocator* pa) {
     size_t used = 0;
     pthread_mutex_lock(&pa->mutex);
@@ -109,6 +167,12 @@ size_t page_allocator_pages_in_use(PageAllocator* pa) {
     return used;
 }
 
+/*
+ * page_allocator_page_bytes
+ *
+ * Returns the page size in bytes (tokens_per_page * bytes_per_token).
+ * Used for memory accounting in stats.
+ */
 size_t page_allocator_page_bytes(PageAllocator* pa) {
     return pa->page_bytes;
 }

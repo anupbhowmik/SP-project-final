@@ -5,8 +5,8 @@ This repository contains the final project for the CS 551 Systems Programming. W
 
 How to run this project:
 
-We have included the executable.
-> ./llm_sim 
+> make clean 
+> make 
 > ./llm_sim
 bytes_per_token = 8192
 Monolithic:
@@ -17,12 +17,6 @@ Paged+Prefix:
   logical_bytes  = 1783947264
   physical_bytes = 749600768
   memory_saved   = 1034346496 (57.98%)
-
-
-For build and run, 
-> make clean 
-> make 
-> ./llm_sim
 
 
 Team mates: 

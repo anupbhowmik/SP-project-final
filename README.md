@@ -28,6 +28,10 @@ Paged+Prefix:
   memory_saved   = 1033756672 (58.07%)
 ```
 
+## Report
+
+Project details and the key features implemented can be found in [report.txt](./report.txt).
+
 ## Team mates
 
 1. Anup Bhowmik
